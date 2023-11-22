@@ -1,5 +1,5 @@
 # liner-temperature-scraper
-A script to scrape liner temperature data from html
+A python script to scrape liner temperature data from html
 
 ## To use
 ```python
