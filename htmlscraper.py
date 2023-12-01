@@ -13,9 +13,9 @@ from bs4 import BeautifulSoup
 import re
 
 
-def fetch_html_content(ip_address, path=None):
+def fetch_html_content(ip_address, path=None, protocol="http"):
     # Construct the URL with the given IP address and optional path
-    url = f'http://{ip_address}{path or ""}'
+    url = f'{protocol}://{ip_address}{path or ""}'
 
     # Make a GET request to the URL
     response = requests.get(url)
@@ -32,12 +32,12 @@ def fetch_html_content(ip_address, path=None):
 
 def parse_html_content(html):
     # Parse the HTML content using BeautifulSoup
-    return BeautifulSoup(html, 'html.parser')
+    return BeautifulSoup(html, "html.parser")
 
 
 def extract_timestamp_from_strings(strings):
     # Define a regular expression pattern for the timestamp format
-    timestamp_pattern = re.compile(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}')
+    timestamp_pattern = re.compile(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}")
 
     # Iterate through the strings to find a matching timestamp
     for string in strings:
@@ -62,3 +62,24 @@ def scrape_timestamp_from_soup(soup):
         # Print a message if the timestamp is not found
         print("Timestamp not found.")
         return None
+
+
+def extract_elements_by_ids(html, id_list):
+    result_dict = {}
+
+    if isinstance(html, str):
+        soup = BeautifulSoup(html, "html.parser")
+    else:
+        soup = html
+
+    # Ensure id_list is a list, even if it contains a single ID
+    if not isinstance(id_list, list):
+        id_list = [id_list]
+
+    for element_id in id_list:
+        element = soup.find(id=element_id)
+
+        if element:
+            result_dict[element_id] = element.text
+
+    return result_dict

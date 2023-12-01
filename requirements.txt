@@ -6,3 +6,5 @@ python-dotenv==1.0.0
 requests==2.31.0
 soupsieve==2.5
 urllib3==2.1.0
+fast_influxdb_client @ git+https://github.com/davidson-engineering/fast-influxdb-client.git@v0.1.1
+log_formatter @ git+https://github.com/davidson-engineering/python-formatted-logging.git@v0.0.2

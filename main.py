@@ -8,94 +8,142 @@
 """A script to scrape liner temperature data from html"""
 # ---------------------------------------------------------------------------
 import os
+import time
+from datetime import datetime
 from dotenv import load_dotenv
+import logging
+import re
 
-from htmlscraper import scrape_timestamp_from_soup, fetch_html_content, parse_html_content
+from htmlscraper import (
+    fetch_html_content,
+    parse_html_content,
+    extract_elements_by_ids,
+)
+from custom_influxdb_client import CustomInfluxDBClient
+from fast_influxdb_client.fast_influxdb_client import InfluxMetric
+import log_formatter
+
+ENV_FILEPATH = ".env"
 
 # Load environment variables from .env file
-load_dotenv()
+load_dotenv(ENV_FILEPATH)
 
 
-def scrape_temp_data_from_soup(soup):
+def setup_logging():
+    import sys
+
+    # Setup logging
+    script_name = os.path.splitext(os.path.basename(sys.argv[0]))[0]
+    if not log_formatter.setup_logging(
+        console_log_output="stdout",
+        console_log_level="info",
+        console_log_color=True,
+        logfile_file=f"{script_name}.log",
+        logfile_log_level="debug",
+        logfile_log_color=False,
+        logfile_log_template="%(color_on)s[%(created)d] [%(threadName)s] [%(levelname)-8s] %(message)s%(color_off)s",
+    ):
+        print("Failed to setup logging, aborting.")
+        return 1
+
+
+def process_txt_file(file_path):
     try:
-        top_plate_temp = {
-            f'Thermocouple {i}': temp.get_text(strip=True)
-            for i, temp in enumerate(soup.select('h1:-soup-contains("Top Plate Temperature") + p'))
-        }
-
-        bottom_plate_temp = {
-            f'Thermocouple {i}': temp.get_text(strip=True)
-            for i, temp in enumerate(soup.select('h1:-soup-contains("Bottom Plate Temperature") + p'))
-        }
-
-        ir_sensor_array_temps = [temp.get_text(strip=True) if temp and temp.get_text(
-            strip=True) else '0' for temp in soup.select('table td')]
-
-        current_temp_setpoint_top_elem = soup.find(
-            'label', string='Current temperature setpoint:')
-        current_temp_setpoint_top = current_temp_setpoint_top_elem.find_next(
-            'p').get_text(strip=True) if current_temp_setpoint_top_elem else None
-
-        current_temp_setpoint_bot_elem = soup.find('h1', string='Bottom Plate Temperature').find_next(
-            'label', string='Current temperature setpoint:')
-        current_temp_setpoint_bot = current_temp_setpoint_bot_elem.find_next(
-            'p').get_text(strip=True) if current_temp_setpoint_bot_elem else None
-
-        sd_card_status_elem = soup.find(
-            'h1', string='Data logging').find_next('p')
-        sd_card_status = sd_card_status_elem.get_text(
-            strip=True) if sd_card_status_elem else None
-
-        # Extract timestamp using a more general approach
-        timestamp = scrape_timestamp_from_soup(soup)
-
-        return {
-            "Top Plate Temperature": top_plate_temp,
-            "Bottom Plate Temperature": bottom_plate_temp,
-            "IR Sensor Array Temperatures": ir_sensor_array_temps,
-            "Current Temperature Setpoint (Top Plate)": current_temp_setpoint_top,
-            "Current Temperature Setpoint (Bottom Plate)": current_temp_setpoint_bot,
-            "SD Card Status": sd_card_status,
-            "Timestamp": timestamp,
-        }
+        with open(file_path, "r") as txt_file:
+            result_list = [line.strip() for line in txt_file.readlines()]
+            return result_list
     except Exception as e:
-        # Handle exceptions and print an error message
-        print(f"Error during scraping: {e}")
+        logging.error(e)
         return None
+
+
+def convert_to_float(string):
+    # Use regular expression to remove non-numeric characters
+    numeric_string = re.sub(r"[^0-9.]+", "", string)
+
+    try:
+        result_float = float(numeric_string)
+        return result_float
+    except ValueError:
+        logging.error(f"Unable to convert '{string}' to a float.")
+        return 0
 
 
 def display_data(scraped_data):
     if scraped_data:
         # Print or use the extracted data as needed
         for key, value in scraped_data.items():
-            print(f"{key}:", value)
+            logging.info(f"{key}: {value}")
     else:
         # Print a message if there is no data to display
-        print("No data to display.")
+        logging.warning("No data to display.")
 
 
-def scrape_data_from_address(ip_address, path=None):
-    # Fetch HTML content from the specified address and path
-    html = fetch_html_content(ip_address, path)
+def post_process_data(data):
+    new_data_dict = {}
 
-    # Parse the HTML content using BeautifulSoup
-    soup = parse_html_content(html)
+    included_keys = [
+        "top_TC1",
+        "top_TC2",
+        "top_TC3",
+        "IR_ref",
+        "IR_array_temp0",
+        "IR_array_temp1",
+        "IR_array_temp2",
+        "IR_array_temp3",
+        "IR_array_temp4",
+        "IR_array_temp5",
+        "IR_array_temp6",
+        "IR_array_temp7",
+        "top_setpoint",
+        "top_PID",
+        "bot_TC1",
+        "bot_TC2",
+        "bot_TC3",
+        "bot_setpoint",
+        "bot_PID",
+    ]
 
-    # Scrape data from the parsed HTML
-    temp_data = scrape_temp_data_from_soup(soup)
+    for k, v in data.items():
+        if k in included_keys:
+            v = convert_to_float(v)
+        if v is None:
+            v = 0.0
+        new_data_dict[k] = v
 
-    # Return the scraped data
-    return temp_data
+    return new_data_dict
 
 
 def main():
     # Replace 'your_ip_address' with the actual IP address
     ip_address = os.getenv("IP_ADDRESS")  # bench address
     path = os.getenv("PATH")  # bench address
+    # Setup fast influxdb client
+    update_period = float(os.getenv("UPDATE_PERIOD"))
 
-    # Scrape and display data from the specified IP address
-    data = scrape_data_from_address(ip_address, path)
-    display_data(data)
+    setup_logging()
+
+    client = CustomInfluxDBClient(ENV_FILEPATH, delay=update_period)
+
+    id_lookup_path = "lookup_ids.txt"
+    lookup_ids_list = process_txt_file(id_lookup_path)
+
+    while 1:
+        # Fetch HTML content from the specified address and path
+        html = fetch_html_content(ip_address, path, protocol="http")
+        # Parse the HTML content using BeautifulSoup
+        soup = parse_html_content(html)
+        # Scrape data from the parsed HTML
+        data = extract_elements_by_ids(soup, lookup_ids_list)
+
+        data = post_process_data(data)
+
+        metric = InfluxMetric(measurement="liner_heater", fields=data)
+        client.add_metrics_to_queue(metric)
+
+        logging.info(f"*** {datetime.now()} ***")
+        display_data(data)
+        time.sleep(update_period)
 
 
 if __name__ == "__main__":
