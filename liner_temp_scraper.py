@@ -35,7 +35,7 @@ def setup_logging():
         console_log_level="info",
         console_log_color=True,
         logfile_file=f"{script_name}.log",
-        logfile_log_level="debug",
+        logfile_log_level="info",
         logfile_log_color=False,
         logfile_log_template="%(color_on)s[%(created)d] [%(threadName)s] [%(levelname)-8s] %(message)s%(color_off)s",
     ):
@@ -54,6 +54,9 @@ def main():
 
     # Setup fast influxdb client
     client = CustomInfluxDBClient(ENV_FILEPATH, delay=update_period)
+    logging.info(
+        f"Connecting to client at {ip_address}/{path} with update frequency of {update_period}"
+    )
 
     measurement_filepath = "measurements.yaml"
     measurements = load_measurements_from_yaml(measurement_filepath)
@@ -74,8 +77,8 @@ def main():
         metric = InfluxMetric(measurement="liner_heater", fields=measurements.asdict())
         client.add_metrics_to_queue(metric)
 
-        logging.info(f"*** {datetime.now()} ***")
-        logging.info(str(measurements))
+        logging.info(f"Metric uploaded to influx at{datetime.now()}")
+        logging.debug(str(measurements))
         time.sleep(update_period)
 
 
