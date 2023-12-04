@@ -11,14 +11,22 @@
 import requests
 from bs4 import BeautifulSoup
 import re
+import logging
+
+
+class GetRequestUnsuccessful(Exception):
+    pass
 
 
 def fetch_html_content(ip_address, path=None, protocol="http"):
     # Construct the URL with the given IP address and optional path
     url = f'{protocol}://{ip_address}{path or ""}'
-
-    # Make a GET request to the URL
-    response = requests.get(url)
+    try:
+        # Make a GET request to the URL
+        response = requests.get(url)
+    except ConnectionRefusedError as e:
+        logging.warning(e)
+        raise GetRequestUnsuccessful
 
     # Check if the request was successful (status code 200)
     if response.status_code == 200:
@@ -27,7 +35,7 @@ def fetch_html_content(ip_address, path=None, protocol="http"):
     else:
         # Print an error message if the request fails and return None
         print(f"Failed to retrieve HTML. Status code: {response.status_code}")
-        return None
+        raise GetRequestUnsuccessful
 
 
 def parse_html_content(html):
@@ -83,3 +91,13 @@ def extract_elements_by_ids(html, id_list):
             result_dict[element_id] = element.text
 
     return result_dict
+
+
+def display_data(scraped_data):
+    if scraped_data:
+        # Print or use the extracted data as needed
+        for key, value in scraped_data.items():
+            logging.info(f"{key}: {value}")
+    else:
+        # Print a message if there is no data to display
+        logging.warning("No data to display.")
