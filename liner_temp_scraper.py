@@ -46,7 +46,7 @@ def setup_logging():
 def main():
     # Load variables from .env
     ip_address = os.getenv("IP_ADDRESS")
-    path = os.getenv("PATH")
+    path = os.getenv("ADDRESS_PATH")
     update_period = float(os.getenv("UPDATE_PERIOD"))
 
     # setup customised logging
@@ -55,7 +55,7 @@ def main():
     # Setup fast influxdb client
     client = CustomInfluxDBClient(ENV_FILEPATH, delay=update_period)
     logging.info(
-        f"Connecting to client at {ip_address}/{path} with update frequency of {update_period}"
+        f"Connecting to client at {ip_address} with update frequency of {update_period}s"
     )
 
     measurement_filepath = "measurements.yaml"
@@ -77,7 +77,7 @@ def main():
         metric = InfluxMetric(measurement="liner_heater", fields=measurements.asdict())
         client.add_metrics_to_queue(metric)
 
-        logging.info(f"Metric uploaded to influx at{datetime.now()}")
+        logging.info(f"Metric uploaded to influx at {datetime.now()}")
         logging.debug(str(measurements))
         time.sleep(update_period)
 

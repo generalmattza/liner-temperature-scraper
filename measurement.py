@@ -13,7 +13,7 @@ def convert_to_float(string):
         result_float = float(numeric_string)
         return result_float
     except (ValueError, TypeError):
-        logging.warning(
+        logging.debug(
             f"Unable to convert '{string}' to a float. Assigning default value of 0.0"
         )
         return 0.0
