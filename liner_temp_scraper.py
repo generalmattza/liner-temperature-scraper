@@ -36,11 +36,12 @@ def setup_logging():
         console_log_level="info",
         console_log_color=True,
         console_log_datefmt="%Y%m%d %H:%M:%S",
-        logfile_file=f"{script_name}.log",
+        logfile_file=f"logs/{script_name}.log",
         logfile_log_level="info",
         logfile_log_color=False,
         logfile_log_template="%(color_on)s[%(asctime)s] [%(threadName)s] [%(levelname)-8s] %(message)s%(color_off)s",
         logfile_log_datefmt="%Y%m%d %H:%M:%S",
+        logfile_timed_rotation=True,
     )
     if not logger:
         print("Failed to setup logging, aborting.")
