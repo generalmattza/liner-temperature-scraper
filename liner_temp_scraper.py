@@ -9,15 +9,15 @@
 # ---------------------------------------------------------------------------
 import os
 import time
-from datetime import datetime
 from dotenv import load_dotenv
 import logging
 
 import htmlscraper as scraper
-from custom_influxdb_client import CustomInfluxDBClient
+from custom_influxdb_client import CustomInfluxDBClient, InfluxDBLoggingHandler
 from fast_influxdb_client.fast_influxdb_client import InfluxMetric
 import log_formatter
 from measurement import load_measurements_from_yaml
+
 
 ENV_FILEPATH = ".env"
 
@@ -31,7 +31,7 @@ def setup_logging():
     # Setup logging
     script_name = os.path.splitext(os.path.basename(sys.argv[0]))[0]
 
-    if not log_formatter.setup_logging(
+    logger = log_formatter.setup_logging(
         console_log_output="stdout",
         console_log_level="info",
         console_log_color=True,
@@ -41,9 +41,11 @@ def setup_logging():
         logfile_log_color=False,
         logfile_log_template="%(color_on)s[%(asctime)s] [%(threadName)s] [%(levelname)-8s] %(message)s%(color_off)s",
         logfile_log_datefmt="%Y%m%d %H:%M:%S",
-    ):
+    )
+    if not logger:
         print("Failed to setup logging, aborting.")
-        return 1
+        return None
+    return logger
 
 
 def main():
@@ -53,13 +55,15 @@ def main():
     update_period = float(os.getenv("UPDATE_PERIOD"))
 
     # setup customised logging
-    setup_logging()
+    logger = setup_logging()
 
     # Setup fast influxdb client
     client = CustomInfluxDBClient(ENV_FILEPATH, delay=update_period)
     logging.info(
         f"Connecting to client at {ip_address} with update frequency of {update_period}s"
     )
+    # Setup and assign logging handler to influxdb
+    logger.addHandler(client.getLoggingHandler())
 
     measurement_filepath = "measurements.yaml"
     measurements = load_measurements_from_yaml(measurement_filepath)

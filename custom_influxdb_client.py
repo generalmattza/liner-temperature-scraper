@@ -1,7 +1,8 @@
 import time
 import threading
+import logging
 
-from fast_influxdb_client.fast_influxdb_client import FastInfluxDBClient
+from fast_influxdb_client.fast_influxdb_client import FastInfluxDBClient, InfluxMetric
 
 
 class CustomInfluxDBClient(FastInfluxDBClient):
@@ -38,3 +39,22 @@ class CustomInfluxDBClient(FastInfluxDBClient):
             if not isinstance(metrics, list):
                 metrics = [metrics]
             self.queue.extend(metrics)
+
+    def getLoggingHandler(self):
+        return InfluxDBLoggingHandler(self)
+
+
+class InfluxDBLoggingHandler(logging.Handler):
+    def __init__(self, client):
+        super().__init__()
+        self.client = client
+
+    def emit(self, record):
+        log_entry = InfluxMetric(
+            measurement="logs",
+            tags={"level": record.levelname, "logger": record.name},
+            fields={
+                "message": self.format(record),
+            },
+        )
+        self.client.add_metrics_to_queue(log_entry)
