@@ -24,7 +24,7 @@ def fetch_html_content(ip_address, path=None, protocol="http"):
     try:
         # Make a GET request to the URL
         response = requests.get(url)
-    except ConnectionRefusedError as e:
+    except requests.exceptions.ConnectionError as e:
         logging.warning(e)
         raise GetRequestUnsuccessful
 

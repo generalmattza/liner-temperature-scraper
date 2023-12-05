@@ -30,14 +30,17 @@ def setup_logging():
 
     # Setup logging
     script_name = os.path.splitext(os.path.basename(sys.argv[0]))[0]
+
     if not log_formatter.setup_logging(
         console_log_output="stdout",
         console_log_level="info",
         console_log_color=True,
+        console_log_datefmt="%Y%m%d %H:%M:%S",
         logfile_file=f"{script_name}.log",
         logfile_log_level="info",
         logfile_log_color=False,
-        logfile_log_template="%(color_on)s[%(created)d] [%(threadName)s] [%(levelname)-8s] %(message)s%(color_off)s",
+        logfile_log_template="%(color_on)s[%(asctime)s] [%(threadName)s] [%(levelname)-8s] %(message)s%(color_off)s",
+        logfile_log_datefmt="%Y%m%d %H:%M:%S",
     ):
         print("Failed to setup logging, aborting.")
         return 1
@@ -77,7 +80,7 @@ def main():
         metric = InfluxMetric(measurement="liner_heater", fields=measurements.asdict())
         client.add_metrics_to_queue(metric)
 
-        logging.info(f"Metric uploaded to influx at {datetime.now()}")
+        logging.info(f"Metric uploaded to influx successfully")
         logging.debug(str(measurements))
         time.sleep(update_period)
 
