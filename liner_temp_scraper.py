@@ -16,7 +16,7 @@ import htmlscraper as scraper
 from custom_influxdb_client import CustomInfluxDBClient, InfluxDBLoggingHandler
 from fast_influxdb_client.fast_influxdb_client import InfluxMetric
 import log_formatter
-from measurement import load_measurements_from_yaml
+from measurement import load_measurements_from_yaml, load_data_from_csv
 
 
 ENV_FILEPATH = ".env"
@@ -47,6 +47,26 @@ def setup_logging():
         print("Failed to setup logging, aborting.")
         return None
     return logger
+
+
+def load_measurements_from_csv():
+    data_file_path = "measurement_data_20231201.csv"
+    measurement_file_path = "measurements.yaml"
+
+    measurements = load_measurements_from_yaml(measurement_file_path)
+    measurements_series = load_data_from_csv(data_file_path, measurements)
+
+    client = CustomInfluxDBClient(ENV_FILEPATH, delay=0)
+
+    for measurements in measurements_series:
+        metric = InfluxMetric(
+            measurement="liner_heater",
+            fields=measurements.asdict(),
+            time=measurements.time,
+        )
+        client.add_metrics_to_queue(metric)
+
+    time.sleep(10)
 
 
 def main():
@@ -92,3 +112,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    # load_measurements_from_csv()

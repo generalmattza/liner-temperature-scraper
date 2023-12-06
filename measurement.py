@@ -2,6 +2,7 @@ import yaml
 import re
 import logging
 from datetime import datetime
+import pytz
 
 date_fmt = "%Y-%m-%d %H:%M:%S"
 
@@ -58,8 +59,20 @@ class Measurement:
     def __str__(self):
         return f"{self.name} ({self.category}) {self.value}"
 
+    def create_copy(self):
+        return self.__class__(
+            name=self.name,
+            value=self.value,
+            category=self.category,
+            time=self.time,
+        )
+
 
 class Measurements(list):
+    def __init__(self, *args, time=None, **kwargs):
+        super().__init__(args)
+        self.time = time or datetime.now()
+
     @property
     def ids(self):
         return [el.name for el in self]
@@ -89,6 +102,31 @@ def load_measurements_from_yaml(file_path):
     return measurements
 
 
+def load_data_from_csv(file_path, measurements):
+    import csv
+
+    with open(file_path, newline="") as csvfile:
+        reader = csv.DictReader(csvfile)
+        populated_measurements = []
+
+        for row in reader:
+            time = row["date"] + " " + row["time"]
+            time = datetime.strptime(time, "%Y-%m-%d %H:%M:%S")
+            time = time.replace(tzinfo=pytz.timezone("America/Los_Angeles"))
+            populated_measurement_set = Measurements(time=time)
+
+            for measurement in measurements:
+                populated_measurement = measurement.create_copy()
+                try:
+                    populated_measurement.value = row[measurement.name]
+                    populated_measurement.time = time
+                except KeyError:
+                    pass
+                populated_measurement_set.append(populated_measurement)
+            populated_measurements.append(populated_measurement_set)
+    return populated_measurements
+
+
 def main():
     # Example usage:
     file_path = "path/to/your/file.yaml"
@@ -100,5 +138,13 @@ def main():
         )
 
 
+def main2():
+    data_file_path = "measurement_data_20231201.csv"
+    measurement_file_path = "measurements.yaml"
+
+    measurements = load_measurements_from_yaml(measurement_file_path)
+    measurements = load_data_from_csv(data_file_path, measurements)
+
+
 if __name__ == "__main__":
-    main()
+    main2()
