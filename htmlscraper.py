@@ -13,19 +13,21 @@ from bs4 import BeautifulSoup
 import re
 import logging
 
+logger = logging.getLogger(__name__)
+
 
 class GetRequestUnsuccessful(Exception):
     pass
 
 
-def fetch_html_content(ip_address, path=None, protocol="http"):
+def fetch_html_content(url):
     # Construct the URL with the given IP address and optional path
-    url = f'{protocol}://{ip_address}{path or ""}'
     try:
         # Make a GET request to the URL
         response = requests.get(url)
     except requests.exceptions.ConnectionError as e:
-        logging.warning(e)
+        logger.warning('HTML GET request was unsuccessful',
+                       extra=dict(details=e))
         raise GetRequestUnsuccessful
 
     # Check if the request was successful (status code 200)
@@ -34,7 +36,8 @@ def fetch_html_content(ip_address, path=None, protocol="http"):
         return response.text
     else:
         # Print an error message if the request fails and return None
-        print(f"Failed to retrieve HTML. Status code: {response.status_code}")
+        logger.warning(f"Failed to retrieve HTML. Status code: {
+                       response.status_code}")
         raise GetRequestUnsuccessful
 
 
@@ -68,7 +71,7 @@ def scrape_timestamp_from_soup(soup):
         return timestamp
     else:
         # Print a message if the timestamp is not found
-        print("Timestamp not found.")
+        logger.warning("Timestamp not found.")
         return None
 
 
@@ -97,7 +100,7 @@ def display_data(scraped_data):
     if scraped_data:
         # Print or use the extracted data as needed
         for key, value in scraped_data.items():
-            logging.info(f"{key}: {value}")
+            logger.info(f"{key}: {value}")
     else:
         # Print a message if there is no data to display
-        logging.warning("No data to display.")
+        logger.warning("No data to display.")

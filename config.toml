@@ -1,0 +1,13 @@
+[influx2]
+    url = "http://gfyvrdatadash.gf.local:8086"
+    token = "JvA537vc-7y-O6kZCKuDGf_h30178ikiGWByHG7nmc0TjLOi2ONYunCslhDU7285GB003CWuXtOYntAvd12iQQ=="
+    org = "generalfusion"
+    timeout = 6000
+    connection_pool_maxsize = 40
+    auth_basic = false
+    update_period = 3
+
+
+[heater_control_webpage]
+    url = 'http://p0heaterblock.gf.local/'
+    #max_retries = 10

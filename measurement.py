@@ -1,7 +1,7 @@
 import yaml
 import re
 import logging
-from datetime import datetime
+from datetime import datetime, UTC
 import pytz
 
 date_fmt = "%Y-%m-%d %H:%M:%S"
@@ -15,15 +15,26 @@ def convert_to_float(string):
         return result_float
     except (ValueError, TypeError):
         logging.debug(
-            f"Unable to convert '{string}' to a float. Assigning default value of 0.0"
+            f"Unable to convert '{
+                string}' to a float. Assigning default value of 0.0"
         )
         return 0.0
+
+
+def convert_to_date(value, default_time=None):
+    if default_time is None:
+        default_time = datetime.now(UTC)
+    try:
+        # Assuming value is a string representation of a datetime
+        return datetime.strptime(value, date_fmt).strftime(date_fmt)
+    except (TypeError, ValueError):
+        return default_time.strftime(date_fmt)
 
 
 class Measurement:
     def __init__(self, name, value, category, time=None):
         self.name = name
-        self.time = time or datetime.now()
+        self.time = time or datetime.now(UTC)
         self.category = category
         self.value = value
 
@@ -42,11 +53,7 @@ class Measurement:
         elif category == "float":
             return convert_to_float(value)
         elif category == "datetime":
-            try:
-                # Assuming value is a string representation of a datetime
-                return datetime.strptime(value, date_fmt).strftime(date_fmt)
-            except TypeError:
-                return self.time.strftime(date_fmt)
+            return convert_to_date(value, default_time=self.time)
         elif category == "string":
             return str(value)
         else:
@@ -134,7 +141,8 @@ def main():
 
     for measurement in measurements:
         print(
-            f"Name: {measurement.name}, Value: {measurement.value}, Category: {measurement.category}"
+            f"Name: {measurement.name}, Value: {
+                measurement.value}, Category: {measurement.category}"
         )
 
 

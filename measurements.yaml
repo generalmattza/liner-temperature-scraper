@@ -19,9 +19,13 @@ temperature:
 float:
   - top_PID
   - bot_PID
+  - top_batterylevel
+  - bot_batterylevel
 datetime:
   - top_timestamp
   - bot_timestamp
 string:
   - SD_card_status
   - logging_status
+  - top_batwarning
+  - bot_batwarning
