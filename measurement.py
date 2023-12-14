@@ -2,7 +2,6 @@ import yaml
 import re
 import logging
 from datetime import datetime, UTC
-import pytz
 
 date_fmt = "%Y-%m-%d %H:%M:%S"
 
@@ -118,8 +117,7 @@ def load_data_from_csv(file_path, measurements):
 
         for row in reader:
             time = row["date"] + " " + row["time"]
-            time = datetime.strptime(time, "%Y-%m-%d %H:%M:%S")
-            time = time.replace(tzinfo=pytz.timezone("America/Los_Angeles"))
+            time = datetime.strptime(time, "%Y-%m-%d %H:%M:%S").astimezone(UTC)
             populated_measurement_set = Measurements(time=time)
 
             for measurement in measurements:
