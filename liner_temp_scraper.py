@@ -20,6 +20,7 @@ CLIENT_CONFIG_FILEPATH = 'config.toml'
 
 
 def setup_logging():
+
     import sys
 
     # Setup logging
@@ -30,6 +31,7 @@ def setup_logging():
         console_log_level="info",
         console_log_color=True,
         # console_log_datefmt="%Y%m%d %H:%M:%S",
+        console_log_template="%(color_on)s[%(asctime)s] [%(threadName)s] [%(levelname)-8s] %(message)s%(color_off)s",
         logfile_file=f"logs/{script_name}.log",
         logfile_log_level="debug",
         logfile_log_color=False,
@@ -71,10 +73,9 @@ def load_measurements_from_csv():
 def main():
 
     influx_config = read_toml_file('config.toml')['influx2']
-    update_period = influx_config['update_period']
 
     client = FastInfluxDBClient.from_config_file(
-        CLIENT_CONFIG_FILEPATH, delay=update_period)
+        CLIENT_CONFIG_FILEPATH, delay=influx_config['update_period'])
     client.default_bucket = 'prototype-zero'
 
     # setup customised logging
@@ -110,11 +111,13 @@ def main():
         scraped_values = scraper.extract_elements_by_ids(
             soup, measurements.ids)
         measurements.update_values(scraped_values)
-        metric = InfluxMetric(measurement="liner_heater",
-                              fields=measurements.asdict())
+        metric = InfluxMetric(
+            measurement="liner_heater",
+            fields=measurements.asdict()
+        )
         client.write_metric(metric)
         logger.debug(str(measurements))
-        time.sleep(update_period)
+        time.sleep(influx_config['update_period'])
 
 
 if __name__ == "__main__":
