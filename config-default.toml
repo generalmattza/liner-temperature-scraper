@@ -1,0 +1,13 @@
+[influx2]
+    url = "http://localhost:8086"
+    token = "super_secret_token"
+    org = "my_org"
+    timeout = 10_000
+    connection_pool_maxsize = 40
+    auth_basic = false
+    update_period = 3
+
+
+[heater_control_webpage]
+    url = 'http://address.to.html.page'
+    #max_retries = 10

@@ -8,6 +8,6 @@ A python script to scrape liner temperature data from html
 > python -m venv .venv
 > .venv/bin/activate.ps1 #assuming powershell terminal
 > pip install -r requirements.txt
-> cp .env-default .env
+> mv config-default.toml config.toml
 ```
 Then set your ip address and path (optional) in .env
