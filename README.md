@@ -10,4 +10,4 @@ A python script to scrape liner temperature data from html
 > pip install -r requirements.txt
 > mv config-default.toml config.toml
 ```
-Then set your ip address and path (optional) in .env
+Then set your ip address and path (optional) in config.toml
