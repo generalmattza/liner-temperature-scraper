@@ -36,8 +36,7 @@ def fetch_html_content(url):
         return response.text
     else:
         # Print an error message if the request fails and return None
-        logger.warning(f"Failed to retrieve HTML. Status code: {
-                       response.status_code}")
+        logger.warning(f"Failed to retrieve HTML. Status code: {response.status_code}")
         raise GetRequestUnsuccessful
 
 
@@ -74,6 +73,13 @@ def scrape_timestamp_from_soup(soup):
         logger.warning("Timestamp not found.")
         return None
 
+def remove_null_values_from_dict(result_dict, null='NaN'):
+    assert isinstance(result_dict, dict)
+    result_dict_copy = result_dict.copy()
+    for k,v in result_dict:
+        if v == null:
+            result_dict_copy.pop(k)
+    return result_dict_copy
 
 def extract_elements_by_ids(html, id_list):
     result_dict = {}
@@ -93,6 +99,7 @@ def extract_elements_by_ids(html, id_list):
         if element:
             result_dict[element_id] = element.text
 
+    result_dict = remove_null_values_from_dict(result_dict)
     return result_dict
 
 

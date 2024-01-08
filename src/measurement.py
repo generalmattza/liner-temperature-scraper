@@ -1,10 +1,13 @@
 import yaml
 import re
 import logging
-from datetime import datetime, UTC
+from datetime import datetime, timezone
 
 date_fmt = "%Y-%m-%d %H:%M:%S"
 
+
+class InvalidMeasurement(Exception):
+    pass
 
 def convert_to_float(string):
     # Use regular expression to remove non-numeric characters
@@ -15,27 +18,28 @@ def convert_to_float(string):
     except (ValueError, TypeError):
         logging.debug(
             f"Unable to convert '{
-                string}' to a float. Assigning default value of 0.0"
+                string}' to a float."
         )
-        return 0.0
+        raise InvalidMeasurement
 
 
 def convert_to_date(value, default_time=None):
     if default_time is None:
-        default_time = datetime.now(UTC)
+        default_time = datetime.now(timezone.utc)
     try:
         # Assuming value is a string representation of a datetime
         return datetime.strptime(value, date_fmt).strftime(date_fmt)
     except (TypeError, ValueError):
-        return default_time.strftime(date_fmt)
+        raise InvalidMeasurement
 
 
 class Measurement:
     def __init__(self, name, value, category, time=None):
         self.name = name
-        self.time = time or datetime.now(UTC)
+        self.time = time or datetime.now(timezone.utc)
         self.category = category
-        self.value = value
+        if value:
+            self.value = value
 
     @property
     def value(self):
@@ -47,9 +51,7 @@ class Measurement:
 
     def convert_value(self, value, category=None):
         category = category or self.category
-        if category == "temperature":
-            return convert_to_float(value)
-        elif category == "float":
+        if category == "float":
             return convert_to_float(value)
         elif category == "datetime":
             return convert_to_date(value, default_time=self.time)
@@ -103,7 +105,7 @@ def load_measurements_from_yaml(file_path):
 
     for category, names in data.items():
         for name in names:
-            measurements.append(Measurement(name, None, category))
+            measurements.append(Measurement(name=name, value=None, category=category))
 
     return measurements
 
@@ -117,7 +119,7 @@ def load_data_from_csv(file_path, measurements):
 
         for row in reader:
             time = row["date"] + " " + row["time"]
-            time = datetime.strptime(time, "%Y-%m-%d %H:%M:%S").astimezone(UTC)
+            time = datetime.strptime(time, "%Y-%m-%d %H:%M:%S").astimezone(timezone.utc)
             populated_measurement_set = Measurements(time=time)
 
             for measurement in measurements:

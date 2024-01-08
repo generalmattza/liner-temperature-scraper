@@ -1,2 +1,6 @@
-fast_influxdb_client @ git+https://github.com/davidson-engineering/fast-influxdb-client.git@v1.0.2
-log_formatter @ git+https://github.com/davidson-engineering/python-formatted-logging.git@v0.1.1
+fast_influxdb_client @ git+https://github.com/davidson-engineering/fast-influxdb-client.git@v1.0.5
+custom_logging @ git+https://github.com/davidson-engineering/python-custom-logging.git@stable
+toml==0.10.2
+requests==2.31.0
+beautifulsoup4==4.12.2
+PyYAML==6.0.1

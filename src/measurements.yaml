@@ -1,4 +1,8 @@
-temperature:
+float:
+  - top_PID
+  - bot_PID
+  - top_batterylevel
+  - bot_batterylevel
   - top_TC1
   - top_TC2
   - top_TC3
@@ -16,11 +20,6 @@ temperature:
   - IR_array_temp7
   - top_setpoint
   - bot_setpoint
-float:
-  - top_PID
-  - bot_PID
-  - top_batterylevel
-  - bot_batterylevel
 datetime:
   - top_timestamp
   - bot_timestamp

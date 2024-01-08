@@ -1,0 +1,28 @@
+timedRotatingFileHandler:
+  when: midnight
+  interval: 1
+  backupCount: 7
+  encoding: null
+  delay: false
+  utc: false
+  atTime: null
+  errors: null
+
+fileHandler:
+  mode: a
+  encoding: null
+  delay: false
+  errors: null
+
+streamHandler:
+  stream: null
+
+logFormatter:
+  streamHandler:
+    fmt: "%(asctime)s,%(msecs)03d %(threadName)s %(levelname)-8s %(message)s"
+    datefmt: "%Y-%m-%d %H:%M:%S"
+    color: True
+  fileHandler:
+    fmt: "%(asctime)s,%(msecs)03d %(threadName)s %(levelname)-8s %(message)s"
+    datefmt: "%Y-%m-%d %H:%M:%S"
+    color: false
