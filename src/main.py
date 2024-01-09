@@ -100,6 +100,7 @@ def main():
         # Scrape data from the parsed HTML
         scraped_values = scraper.extract_elements_by_ids(soup, measurements.ids)
         measurements.update_values(scraped_values)
+        print(measurements)
         metric = InfluxMetric(
             measurement=CLIENT_DEFAULT_MEASUREMENT, fields=measurements.asdict()
         )

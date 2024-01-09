@@ -11,26 +11,17 @@ class InvalidMeasurement(Exception):
 
 def convert_to_float(string):
     # Use regular expression to remove non-numeric characters
-    try:
-        numeric_string = re.sub(r"[^0-9.]+", "", string)
-        result_float = float(numeric_string)
-        return result_float
-    except (ValueError, TypeError):
-        logging.debug(
-            f"Unable to convert '{
-                string}' to a float."
-        )
-        raise InvalidMeasurement
+    numeric_string = re.sub(r"[^0-9.]+", "", string)
+    result_float = float(numeric_string)
+    return result_float
 
 
 def convert_to_date(value, default_time=None):
     if default_time is None:
         default_time = datetime.now(timezone.utc)
-    try:
-        # Assuming value is a string representation of a datetime
-        return datetime.strptime(value, date_fmt).strftime(date_fmt)
-    except (TypeError, ValueError):
-        raise InvalidMeasurement
+    # Assuming value is a string representation of a datetime
+    return datetime.strptime(value, date_fmt).strftime(date_fmt)
+
 
 
 class Measurement:
@@ -47,8 +38,12 @@ class Measurement:
 
     @value.setter
     def value(self, value):
-        self._value = self.convert_value(value)
-
+        try:
+            self._value = self.convert_value(value)
+        except (ValueError, TypeError):
+            logging.debug(f"Unable to convert '{value}' to type '{self.category}'")
+            raise InvalidMeasurement
+        
     def convert_value(self, value, category=None):
         category = category or self.category
         if category == "float":
@@ -87,7 +82,10 @@ class Measurements(list):
 
     def update_values(self, values):
         for el in self:
-            el.value = values[el.name]
+            try:
+                el.value = values[el.name]
+            except (InvalidMeasurement, KeyError):
+                self.remove(el)            
 
     def asdict(self):
         return {el.name: el.value for el in self}

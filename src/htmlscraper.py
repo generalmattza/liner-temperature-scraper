@@ -26,8 +26,7 @@ def fetch_html_content(url):
         # Make a GET request to the URL
         response = requests.get(url)
     except requests.exceptions.ConnectionError as e:
-        logger.warning('HTML GET request was unsuccessful',
-                       extra=dict(details=e))
+        logger.warning("HTML GET request was unsuccessful", extra=dict(details=e))
         raise GetRequestUnsuccessful
 
     # Check if the request was successful (status code 200)
@@ -71,15 +70,20 @@ def scrape_timestamp_from_soup(soup):
     else:
         # Print a message if the timestamp is not found
         logger.warning("Timestamp not found.")
-        return None
 
-def remove_null_values_from_dict(result_dict, null='NaN'):
+
+def remove_null_values_from_dict(result_dict, null=("nan", "", None)):
     assert isinstance(result_dict, dict)
+    assert isinstance(null, (str, tuple, list))
+    # if null is singular, then make it into a tuple
+    if not isinstance(null, (list, tuple)):
+        null = null
     result_dict_copy = result_dict.copy()
-    for k,v in result_dict:
-        if v == null:
+    for k, v in result_dict.items():
+        if v in null:
             result_dict_copy.pop(k)
     return result_dict_copy
+
 
 def extract_elements_by_ids(html, id_list):
     result_dict = {}
@@ -100,6 +104,7 @@ def extract_elements_by_ids(html, id_list):
             result_dict[element_id] = element.text
 
     result_dict = remove_null_values_from_dict(result_dict)
+    
     return result_dict
 
 
