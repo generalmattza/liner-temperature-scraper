@@ -1,4 +1,4 @@
-fast_influxdb_client @ git+https://github.com/davidson-engineering/fast-influxdb-client.git@v1.0.5
+fast_influxdb_client @ git+https://github.com/generalmattza/fast-influxdb-client.git
 custom_logging @ git+https://github.com/davidson-engineering/python-custom-logging.git@stable
 toml==0.10.2
 requests==2.31.0

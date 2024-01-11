@@ -30,7 +30,7 @@ def setup_logging(client):
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(logging.INFO)
 
-    file_handler = logging.FileHandler(filename=f"{script_name}.log")
+    file_handler = logging.FileHandler(filename=f"logs/{script_name}.log")
     file_handler.setLevel(logging.DEBUG)
 
     # set the log format for the handlers
@@ -53,8 +53,7 @@ def setup_logging(client):
 
     # create the logger
     logger = setup_logger(
-        handlers=[console_handler, file_handler, influx_logging_handler],
-        default_settings="logging_default_settings.yaml",
+        handlers=[console_handler, file_handler, influx_logging_handler]
     )
 
     return logger
@@ -86,7 +85,7 @@ def main():
         "heater_control_webpage"
     ]
     webpage_url = heater_control_webpage_config["url"]
-
+    # test
     while True:
         try:
             # Fetch HTML content from the specified address and path
@@ -99,12 +98,22 @@ def main():
         soup = scraper.parse_html_content(html)
         # Scrape data from the parsed HTML
         scraped_values = scraper.extract_elements_by_ids(soup, measurements.ids)
-        measurements.update_values(scraped_values)
-        print(measurements)
+        logger.debug(scraped_values)
+        # Update existing measurements object values, stripping null values, and return new object
+        measurements = measurements.update_values(scraped_values)
+        # Create new metric
         metric = InfluxMetric(
-            measurement=CLIENT_DEFAULT_MEASUREMENT, fields=measurements.asdict()
+            measurement=CLIENT_DEFAULT_MEASUREMENT,
+            fields=measurements.asdict(),
+            tags={
+                "shot_id": "xxxxxx",
+                "shot_name": "PZero Shot 4",
+                "campaign": "Commissioning",
+            },
         )
+        # Write to influx server
         client.write_metric(metric)
+        # Log measurements to file for debugging
         logger.debug(str(measurements))
         time.sleep(influx_config["update_period"])
 

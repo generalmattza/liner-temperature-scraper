@@ -20,6 +20,7 @@ float:
   - IR_array_temp7
   - top_setpoint
   - bot_setpoint
+  - pressure
 datetime:
   - top_timestamp
   - bot_timestamp
@@ -28,3 +29,4 @@ string:
   - logging_status
   - top_batwarning
   - bot_batwarning
+  - gas

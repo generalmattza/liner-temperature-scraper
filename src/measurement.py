@@ -9,6 +9,7 @@ date_fmt = "%Y-%m-%d %H:%M:%S"
 class InvalidMeasurement(Exception):
     pass
 
+
 def convert_to_float(string):
     # Use regular expression to remove non-numeric characters
     numeric_string = re.sub(r"[^0-9.]+", "", string)
@@ -21,7 +22,6 @@ def convert_to_date(value, default_time=None):
         default_time = datetime.now(timezone.utc)
     # Assuming value is a string representation of a datetime
     return datetime.strptime(value, date_fmt).strftime(date_fmt)
-
 
 
 class Measurement:
@@ -43,7 +43,7 @@ class Measurement:
         except (ValueError, TypeError):
             logging.debug(f"Unable to convert '{value}' to type '{self.category}'")
             raise InvalidMeasurement
-        
+
     def convert_value(self, value, category=None):
         category = category or self.category
         if category == "float":
@@ -81,11 +81,13 @@ class Measurements(list):
         return [el.name for el in self]
 
     def update_values(self, values):
+        self_copy = self.copy()
         for el in self:
             try:
                 el.value = values[el.name]
             except (InvalidMeasurement, KeyError):
-                self.remove(el)            
+                self_copy.remove(el)
+        return Measurements(*self_copy)
 
     def asdict(self):
         return {el.name: el.value for el in self}
@@ -139,8 +141,7 @@ def main():
 
     for measurement in measurements:
         print(
-            f"Name: {measurement.name}, Value: {
-                measurement.value}, Category: {measurement.category}"
+            f"Name: {measurement.name}, Value: {measurement.value}, Category: {measurement.category}"
         )
 
 

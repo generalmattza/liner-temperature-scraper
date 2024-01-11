@@ -9,4 +9,5 @@ services:
     restart: unless-stopped
     command: [ "python", "main.py" ]
     volumes:
-      - /srv/data:/app/data
+      - ./logs:/app/src/logs
+      - /etc/localtime:/etc/localtime:ro # sync timezone with host machine
