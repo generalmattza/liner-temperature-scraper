@@ -79,7 +79,6 @@ def main():
     logger.info(f"Created client to {client.url}", extra=dict(details=f"{client=}"))
 
     measurement_filepath = "measurements.yaml"
-    measurements = load_measurements_from_yaml(measurement_filepath)
 
     heater_control_webpage_config = read_toml_file("config.toml")[
         "heater_control_webpage"
@@ -97,6 +96,7 @@ def main():
         # Parse the HTML content using BeautifulSoup
         soup = scraper.parse_html_content(html)
         # Scrape data from the parsed HTML
+        measurements = load_measurements_from_yaml(measurement_filepath)
         scraped_values = scraper.extract_elements_by_ids(soup, measurements.ids)
         logger.debug(scraped_values)
         # Update existing measurements object values, stripping null values, and return new object
@@ -104,17 +104,17 @@ def main():
         # Create new metric
         metric = InfluxMetric(
             measurement=CLIENT_DEFAULT_MEASUREMENT,
-            fields=measurements.asdict(),
-            tags={
-                "shot_id": "xxxxxx",
-                "shot_name": "PZero Shot 4",
-                "campaign": "Commissioning",
-            },
+            fields=measurements.asdict()
+            # tags={
+            #     "shot_id": "xxxxxx",
+            #     "shot_name": "PZero Shot 4",
+            #     "campaign": "Commissioning",
+            # },
         )
         # Write to influx server
         client.write_metric(metric)
         # Log measurements to file for debugging
-        logger.debug(str(measurements))
+        # logger.debug(measurements)
         time.sleep(influx_config["update_period"])
 
 

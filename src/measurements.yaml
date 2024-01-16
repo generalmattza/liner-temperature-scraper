@@ -20,7 +20,9 @@ float:
   - IR_array_temp7
   - top_setpoint
   - bot_setpoint
-  - pressure
+  - upper_pressure_voltage
+  - upper_pressure_N2
+  - upper_pressure_AR
 datetime:
   - top_timestamp
   - bot_timestamp
@@ -29,4 +31,4 @@ string:
   - logging_status
   - top_batwarning
   - bot_batwarning
-  - gas
+  - upper_pressure_gastype

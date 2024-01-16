@@ -5,6 +5,8 @@ from datetime import datetime, timezone
 
 date_fmt = "%Y-%m-%d %H:%M:%S"
 
+logger = logging.getLogger(__name__)
+
 
 class InvalidMeasurement(Exception):
     pass
@@ -41,7 +43,7 @@ class Measurement:
         try:
             self._value = self.convert_value(value)
         except (ValueError, TypeError):
-            logging.debug(f"Unable to convert '{value}' to type '{self.category}'")
+            logger.debug(f"Unable to convert '{value}' to type '{self.category}'")
             raise InvalidMeasurement
 
     def convert_value(self, value, category=None):
@@ -87,6 +89,7 @@ class Measurements(list):
                 el.value = values[el.name]
             except (InvalidMeasurement, KeyError):
                 self_copy.remove(el)
+                logger.debug(f"removed: {el.name}")
         return Measurements(*self_copy)
 
     def asdict(self):

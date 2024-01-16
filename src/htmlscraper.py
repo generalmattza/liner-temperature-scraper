@@ -82,6 +82,7 @@ def remove_null_values_from_dict(result_dict, null=("nan", "", None)):
     for k, v in result_dict.items():
         if v in null:
             result_dict_copy.pop(k)
+            logger.debug(f"popped: {k}:{v}")
     return result_dict_copy
 
 
@@ -103,8 +104,9 @@ def extract_elements_by_ids(html, id_list):
         if element:
             result_dict[element_id] = element.text
 
+    logger.debug(f"raw list: {result_dict}")
     result_dict = remove_null_values_from_dict(result_dict)
-    
+
     return result_dict
 
 
