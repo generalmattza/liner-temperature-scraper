@@ -36,7 +36,10 @@ class Measurement:
 
     @property
     def value(self):
-        return self._value
+        try:
+            return self._value
+        except AttributeError:
+            return None
 
     @value.setter
     def value(self, value):
@@ -121,7 +124,7 @@ def load_data_from_csv(file_path, measurements):
         populated_measurements = []
 
         for row in reader:
-            time = row["date"] + " " + row["time"]
+            time = row["_time"]
             time = datetime.strptime(time, "%Y-%m-%d %H:%M:%S").astimezone(timezone.utc)
             populated_measurement_set = Measurements(time=time)
 
@@ -130,8 +133,8 @@ def load_data_from_csv(file_path, measurements):
                 try:
                     populated_measurement.value = row[measurement.name]
                     populated_measurement.time = time
-                except KeyError:
-                    pass
+                except (KeyError, InvalidMeasurement):
+                    continue
                 populated_measurement_set.append(populated_measurement)
             populated_measurements.append(populated_measurement_set)
     return populated_measurements
