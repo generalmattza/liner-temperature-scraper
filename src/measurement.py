@@ -89,6 +89,7 @@ class Measurements(list):
         self_copy = self.copy()
         for el in self:
             try:
+                
                 el.value = values[el.name]
             except (InvalidMeasurement, KeyError):
                 self_copy.remove(el)

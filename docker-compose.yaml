@@ -3,7 +3,7 @@ services:
   liner-temperature-scraper:
     build:
       context: .
-    image: liner-temperature-scraper:latest
+    image: liner-temperature-scraper:stable
     container_name: liner-temperature-scraper
     working_dir: /app/src
     restart: unless-stopped
