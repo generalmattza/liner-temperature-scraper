@@ -1,0 +1,34 @@
+float:
+  - top_PID
+  - bot_PID
+  - top_batterylevel
+  - bot_batterylevel
+  - top_TC1
+  - top_TC2
+  - top_TC3
+  - bot_TC1
+  - bot_TC2
+  - bot_TC3
+  - IR_ref
+  - IR_array_temp0
+  - IR_array_temp1
+  - IR_array_temp2
+  - IR_array_temp3
+  - IR_array_temp4
+  - IR_array_temp5
+  - IR_array_temp6
+  - IR_array_temp7
+  - top_setpoint
+  - bot_setpoint
+  - upper_pressure_voltage
+  - upper_pressure_N2
+  - upper_pressure_AR
+datetime:
+  - top_timestamp
+  - bot_timestamp
+string:
+  - SD_card_status
+  - logging_status
+  - top_batwarning
+  - bot_batwarning
+  - upper_pressure_gastype
