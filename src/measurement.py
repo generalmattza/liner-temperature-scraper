@@ -27,7 +27,15 @@ def convert_to_date(value, default_time=None):
 
 
 class Measurement:
-    def __init__(self, name:str, value, category:str, time:datetime=None, source_id:str=None, tags:dict = None):
+    def __init__(
+        self,
+        name: str,
+        value,
+        category: str,
+        time: datetime = None,
+        source_id: str = None,
+        tags: dict = None,
+    ):
         self.name = name
         self.time = time or datetime.now(timezone.utc)
         self.category = category
@@ -42,6 +50,7 @@ class Measurement:
             return self._value
         except AttributeError:
             return None
+
     @property
     def fields(self):
         return dict(name=self.name, value=self.value)
@@ -79,7 +88,7 @@ class Measurement:
             category=self.category,
             time=self.time,
             source_id=self.source_id,
-            tags=self.tags
+            tags=self.tags,
         )
 
 
@@ -90,7 +99,7 @@ class Measurements(list):
 
     @property
     def ids(self):
-        return [el.name for el in self]
+        return [el.source_id for el in self]
 
     def update_values(self, values):
         self_copy = self.copy()
@@ -100,6 +109,10 @@ class Measurements(list):
             except (InvalidMeasurement, KeyError):
                 self_copy.remove(el)
                 logger.debug(f"removed: {el.source_id}")
+            try:
+                el.time = convert_to_date(values[el.source_time])
+            except AttributeError:
+                el.time = self.time
         return Measurements(*self_copy)
 
     def asdict(self):
@@ -126,7 +139,15 @@ def load_measurements_from_yaml(file_path):
                 tags = params["tags"]
             except (KeyError, TypeError):
                 tags = None
-            measurements.append(Measurement(name=name, value=None, category=category, source_id=source_id, tags=tags))
+            measurements.append(
+                Measurement(
+                    name=name,
+                    value=None,
+                    category=category,
+                    source_id=source_id,
+                    tags=tags,
+                )
+            )
 
     return measurements
 

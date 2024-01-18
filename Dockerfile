@@ -12,9 +12,9 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 WORKDIR /app
-COPY . /app
+COPY src /app/src
 
-RUN mkdir /app/src/logs
+RUN mkdir /app/logs
 
 # Creates a non-root user with an explicit UID and adds permission to access the /app folder
 # For more info, please refer to https://aka.ms/vscode-docker-python-configure-containers

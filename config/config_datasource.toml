@@ -1,0 +1,3 @@
+[heater_control_webpage]
+    url = 'http://pzeroheaterblocks.gf.local/'
+    #max_retries = 10

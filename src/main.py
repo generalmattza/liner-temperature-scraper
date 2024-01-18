@@ -10,6 +10,7 @@ import os
 import time
 import logging
 import toml
+import yaml
 
 import htmlscraper as scraper
 from fast_influxdb_client import FastInfluxDBClient, InfluxMetric
@@ -19,6 +20,11 @@ from custom_logging import setup_logger, ColoredLogFormatter
 CLIENT_CONFIG_FILEPATH = "config.toml"
 CLIENT_DEFAULT_BUCKET = "prototype-zero"
 CLIENT_DEFAULT_MEASUREMENT = "liner_heater"
+
+MEASUREMENT_FILEPATH = "config/measurements.yaml"
+TAGS_EXTRA_FILEPATH = "config/tags_extra.yaml"
+INFLUXDBCLIENT_CONFIG_FILEPATH = "config/config_influxdb.toml"
+DATASOURCE_CONFIG_FILEPATH = "config/config_datasource.toml"
 
 
 def setup_logging(client):
@@ -62,7 +68,12 @@ def setup_logging(client):
 
     # create the logger
     logger = setup_logger(
-        handlers=[console_handler, debug_file_handler, influx_logging_handler, info_file_handler]
+        handlers=[
+            console_handler,
+            debug_file_handler,
+            influx_logging_handler,
+            info_file_handler,
+        ]
     )
 
     return logger
@@ -73,33 +84,30 @@ def read_toml_file(filepath):
         return toml.load(file)
 
 
-def main():
-    influx_config = read_toml_file("config.toml")["influx2"]
+def read_yaml_file(filepath):
+    with open(filepath, "r") as file:
+        return yaml.safe_load(file)
 
+
+def main():
+    # Setup fast influxdb client
+    influxdb_config = read_toml_file(INFLUXDBCLIENT_CONFIG_FILEPATH)["influx2"]
     client = FastInfluxDBClient.from_config_file(
-        CLIENT_CONFIG_FILEPATH, delay=influx_config["update_period"]
+        INFLUXDBCLIENT_CONFIG_FILEPATH, delay=influxdb_config["update_period"]
     )
     client.default_bucket = CLIENT_DEFAULT_BUCKET
 
     # setup customised logging
     logger = setup_logging(client)
-
-    # Setup fast influxdb client
+    # now that logger is created, inform user of client creation
     logger.info(f"Created client to {client.url}", extra=dict(details=f"{client=}"))
 
-    measurement_filepath = "src/measurements.yaml"
-
-    heater_control_webpage_config = read_toml_file("config.toml")[
+    # get webpage datasource configuration
+    datasource_config_heatercontrol = read_toml_file(DATASOURCE_CONFIG_FILEPATH)[
         "heater_control_webpage"
     ]
-    webpage_url = heater_control_webpage_config["url"]
+    webpage_url = datasource_config_heatercontrol["url"]
 
-    tags_extra = {
-        "shot_id": "xxxxxx",
-        "shot_name": "PZero Shot 4",
-        "campaign": "Commissioning",
-    }
-    
     while True:
         try:
             # Fetch HTML content from the specified address and path
@@ -111,28 +119,31 @@ def main():
         # Parse the HTML content using BeautifulSoup
         soup = scraper.parse_html_content(html)
         # Scrape data from the parsed HTML
-        measurements = load_measurements_from_yaml(measurement_filepath)
+        measurements = load_measurements_from_yaml(MEASUREMENT_FILEPATH)
         scraped_values = scraper.extract_elements_by_ids(soup, measurements.ids)
         logger.debug(scraped_values)
         # Update existing measurements object values, stripping null values, and return new object
         measurements = measurements.update_values(scraped_values)
-        # set tags for data storage
+        # reread extra tags incase they have changed
+        tags_extra = read_yaml_file(TAGS_EXTRA_FILEPATH)
         for measurement in measurements:
-            # Create new metric
+            # set tags for data storage, merging measurement specific tags with extra_tags
             try:
                 tags_merged = measurement.tags | tags_extra
             except TypeError:
                 tags_merged = tags_extra
+            # Create new metric
             metric = InfluxMetric(
                 measurement=CLIENT_DEFAULT_MEASUREMENT,
                 fields=measurement.fields,
                 tags=tags_merged,
+                time=measurement.time,
             )
             # Write to influx server
-            # client.write_metric(metric)
+            client.write_metric(metric)
         # Log measurements to file for debugging
         logger.debug(measurements)
-        time.sleep(influx_config["update_period"])
+        time.sleep(influxdb_config["update_period"])
 
 
 if __name__ == "__main__":

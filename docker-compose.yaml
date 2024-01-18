@@ -5,9 +5,10 @@ services:
       context: .
     image: liner-temperature-scraper:latest
     container_name: liner-temperature-scraper
-    working_dir: /app/src
+    working_dir: /app
     restart: unless-stopped
-    command: [ "python", "main.py" ]
+    command: [ "python", "src/main.py" ]
     volumes:
-      - ./logs:/app/src/logs
+      - ./logs:/app/logs
+      - ./config:/app/config
       - /etc/localtime:/etc/localtime:ro # sync timezone with host machine
