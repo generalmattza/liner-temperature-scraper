@@ -1,29 +1,113 @@
 float:
   top_PID:
-    db_id: top_PID2
+    tags:
+      type_measure: setpoint
+      type_hardware: heater power
+      location: upper
   bot_PID:
+    tags:
+      type_measure: setpoint
+      type_hardware: heater power
+      location: upper
   top_batterylevel:
+    tags:
+      type_measure: percentage
+      type_hardware: battery level
+      location: upper
   bot_batterylevel:
+    tags:
+      type_measure: percentage
+      type_hardware: battery level
+      location: lower
   top_TC1:
+    tags:
+      type_measure: temperature
+      type_hardware: thermocouple
+      location: upper, position 1
   top_TC2:
+    tags:
+      type_measure: temperature
+      type_hardware: thermocouple
+      location: upper, position 2
   top_TC3:
+    tags:
+      type_measure: temperature
+      type_hardware: thermocouple
+      location: upper, position 3
   bot_TC1:
+    tags:
+      type_measure: temperature
+      type_hardware: thermocouple
+      location: lower, position 1  
   bot_TC2:
+    tags:
+      type_measure: temperature
+      type_hardware: thermocouple
+      location: lower, position 2  
   bot_TC3:
+    tags:
+      type_measure: temperature
+      type_hardware: thermocouple
+      location: lower, position 3  
   IR_ref:
+    tags:
+      type_measure: temperature
+      type_hardware: thermocouple
+      location: internal to IR sensor
   IR_array_temp0:
+    tags:
+      type_measure: temperature
+      type_hardware: infrared
+      location: liner bottom +0
   IR_array_temp1:
+    tags:
+      type_measure: temperature
+      type_hardware: infrared
+      location: liner bottom +1  
   IR_array_temp2:
+    tags:
+      type_measure: temperature
+      type_hardware: infrared
+      location: liner bottom +2
   IR_array_temp3:
+    tags:
+      type_measure: temperature
+      type_hardware: infrared
+      location: liner bottom +3
   IR_array_temp4:
+    tags:
+      type_measure: temperature
+      type_hardware: infrared
+      location: liner bottom +4
   IR_array_temp5:
+    tags:
+      type_measure: temperature
+      type_hardware: infrared
+      location: liner bottom +5  
   IR_array_temp6:
+    tags:
+      type_measure: temperature
+      type_hardware: infrared
+      location: liner bottom +6
   IR_array_temp7:
+    tags:
+      type_measure: temperature
+      type_hardware: infrared
+      location: liner bottom +7
   top_setpoint:
+    tags:
+      type_measure: setpoint
+      location: upper
   bot_setpoint:
-  upper_pressure_voltage:
+    tags:
+      type_measure: setpoint
+      location: lower
   upper_pressure_N2:
-  upper_pressure_AR:
+    source_id: pressure
+    tags:
+      type_measure: pressure
+      type_hardware: stinger
+      location: upper
 datetime:
   top_timestamp:
   bot_timestamp:
@@ -33,3 +117,8 @@ string:
   top_batwarning:
   bot_batwarning:
   upper_pressure_gastype:
+    source_id: gas
+    tags:
+      type_measure: gas type
+      type_hardware: stinger
+      location: upper

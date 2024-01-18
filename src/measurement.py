@@ -27,12 +27,14 @@ def convert_to_date(value, default_time=None):
 
 
 class Measurement:
-    def __init__(self, name, value, category, time=None):
+    def __init__(self, name:str, value, category:str, time:datetime=None, source_id:str=None, tags:dict = None):
         self.name = name
         self.time = time or datetime.now(timezone.utc)
         self.category = category
         if value:
             self.value = value
+        self.source_id = source_id or name
+        self.tags = tags
 
     @property
     def value(self):
@@ -40,6 +42,9 @@ class Measurement:
             return self._value
         except AttributeError:
             return None
+    @property
+    def fields(self):
+        return dict(name=self.name, value=self.value)
 
     @value.setter
     def value(self, value):
@@ -73,6 +78,8 @@ class Measurement:
             value=self.value,
             category=self.category,
             time=self.time,
+            source_id=self.source_id,
+            tags=self.tags
         )
 
 
@@ -89,10 +96,10 @@ class Measurements(list):
         self_copy = self.copy()
         for el in self:
             try:
-                el.value = values[el.name]
+                el.value = values[el.source_id]
             except (InvalidMeasurement, KeyError):
                 self_copy.remove(el)
-                logger.debug(f"removed: {el.name}")
+                logger.debug(f"removed: {el.source_id}")
         return Measurements(*self_copy)
 
     def asdict(self):
@@ -110,8 +117,16 @@ def load_measurements_from_yaml(file_path):
     measurements = Measurements()
 
     for category, names in data.items():
-        for name in names:
-            measurements.append(Measurement(name=name, value=None, category=category))
+        for name, params in names.items():
+            try:
+                source_id = params["source_id"]
+            except (KeyError, TypeError):
+                source_id = None
+            try:
+                tags = params["tags"]
+            except (KeyError, TypeError):
+                tags = None
+            measurements.append(Measurement(name=name, value=None, category=category, source_id=source_id, tags=tags))
 
     return measurements
 
@@ -142,12 +157,12 @@ def load_data_from_csv(file_path, measurements):
 
 def main():
     # Example usage:
-    file_path = "path/to/your/file.yaml"
+    file_path = "src/measurements.yaml"
     measurements = load_measurements_from_yaml(file_path)
 
     for measurement in measurements:
         print(
-            f"Name: {measurement.name}, Value: {measurement.value}, Category: {measurement.category}"
+            f"Name: {measurement.name}, Value: {measurement.value}, Category: {measurement.category}, db_id: {measurement.source_id}"
         )
 
 
@@ -160,4 +175,4 @@ def main2():
 
 
 if __name__ == "__main__":
-    main2()
+    main()

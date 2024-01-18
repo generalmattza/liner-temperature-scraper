@@ -30,8 +30,11 @@ def setup_logging(client):
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(logging.INFO)
 
-    file_handler = logging.FileHandler(filename=f"logs/{script_name}.log")
-    file_handler.setLevel(logging.DEBUG)
+    debug_file_handler = logging.FileHandler(filename=f"logs/{script_name}.debug.log")
+    debug_file_handler.setLevel(logging.DEBUG)
+
+    info_file_handler = logging.FileHandler(filename=f"logs/{script_name}.info.log")
+    info_file_handler.setLevel(logging.INFO)
 
     # set the log format for the handlers
     console_handler.setFormatter(
@@ -40,7 +43,13 @@ def setup_logging(client):
             datefmt="%Y-%m-%d %H:%M:%S",
         )
     )
-    file_handler.setFormatter(
+    debug_file_handler.setFormatter(
+        logging.Formatter(
+            fmt="%(asctime)s,%(msecs)d - %(name)s - %(levelname)-8s - %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+    )
+    info_file_handler.setFormatter(
         logging.Formatter(
             fmt="%(asctime)s,%(msecs)d - %(name)s - %(levelname)-8s - %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
@@ -53,7 +62,7 @@ def setup_logging(client):
 
     # create the logger
     logger = setup_logger(
-        handlers=[console_handler, file_handler, influx_logging_handler]
+        handlers=[console_handler, debug_file_handler, influx_logging_handler, info_file_handler]
     )
 
     return logger
@@ -78,13 +87,19 @@ def main():
     # Setup fast influxdb client
     logger.info(f"Created client to {client.url}", extra=dict(details=f"{client=}"))
 
-    measurement_filepath = "measurements.yaml"
+    measurement_filepath = "src/measurements.yaml"
 
     heater_control_webpage_config = read_toml_file("config.toml")[
         "heater_control_webpage"
     ]
     webpage_url = heater_control_webpage_config["url"]
-    # test
+
+    tags_extra = {
+        "shot_id": "xxxxxx",
+        "shot_name": "PZero Shot 4",
+        "campaign": "Commissioning",
+    }
+    
     while True:
         try:
             # Fetch HTML content from the specified address and path
@@ -101,20 +116,22 @@ def main():
         logger.debug(scraped_values)
         # Update existing measurements object values, stripping null values, and return new object
         measurements = measurements.update_values(scraped_values)
-        # Create new metric
-        metric = InfluxMetric(
-            measurement=CLIENT_DEFAULT_MEASUREMENT,
-            fields=measurements.asdict()
-            # tags={
-            #     "shot_id": "xxxxxx",
-            #     "shot_name": "PZero Shot 4",
-            #     "campaign": "Commissioning",
-            # },
-        )
-        # Write to influx server
-        client.write_metric(metric)
+        # set tags for data storage
+        for measurement in measurements:
+            # Create new metric
+            try:
+                tags_merged = measurement.tags | tags_extra
+            except TypeError:
+                tags_merged = tags_extra
+            metric = InfluxMetric(
+                measurement=CLIENT_DEFAULT_MEASUREMENT,
+                fields=measurement.fields,
+                tags=tags_merged,
+            )
+            # Write to influx server
+            # client.write_metric(metric)
         # Log measurements to file for debugging
-        # logger.debug(measurements)
+        logger.debug(measurements)
         time.sleep(influx_config["update_period"])
 
 
