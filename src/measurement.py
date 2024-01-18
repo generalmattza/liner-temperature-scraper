@@ -53,7 +53,7 @@ class Measurement:
 
     @property
     def fields(self):
-        return dict(name=self.name, value=self.value)
+        return {self.name: self.value}
 
     @value.setter
     def value(self, value):

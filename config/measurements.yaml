@@ -17,14 +17,14 @@ float:
     source_time: top_timestamp
     tags:
       type_measure: percentage
-      type_hardware: battery level
+      type_hardware: battery
       location: upper
   
   bot_batterylevel:
     source_time: bot_timestamp
     tags:
       type_measure: percentage
-      type_hardware: battery level
+      type_hardware: battery
       location: lower
   
   top_TC1:
@@ -166,13 +166,29 @@ datetime:
 
 string:
   SD_card_status:
+    tags:
+      type_measure: status
+      type_hardware: SD card
+  
   logging_status:
+    tags:
+      type_measure: status
+      type_hardware: SD card
+  
   top_batwarning:
+    tags:
+      type_measure: status
+      type_hardware: battery
+  
   bot_batwarning:
+    tags:
+      type_measure: status
+      type_hardware: battery
+  
   upper_pressure_gastype:
     source_time: top_timestamp
     source_id: gas
     tags:
       type_measure: gas type
-      type_hardware: stinger
+      type_hardware: pressure gauge
       location: upper
