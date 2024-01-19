@@ -183,7 +183,7 @@ def main():
 
     for measurement in measurements:
         print(
-            f"Name: {measurement.name}, Value: {measurement.value}, Category: {measurement.category}, db_id: {measurement.source_id}"
+            f"Name: {measurement.name}, Value: {measurement.value}, Category: {measurement.category}, source_id: {measurement.source_id}"
         )
 
 

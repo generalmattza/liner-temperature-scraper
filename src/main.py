@@ -23,8 +23,9 @@ CLIENT_DEFAULT_MEASUREMENT = "liner_heater"
 
 MEASUREMENT_FILEPATH = "config/measurements.yaml"
 TAGS_EXTRA_FILEPATH = "config/tags_extra.yaml"
-INFLUXDBCLIENT_CONFIG_FILEPATH = "config/config_influxdb.toml"
-DATASOURCE_CONFIG_FILEPATH = "config/config_datasource.toml"
+INFLUXDBCLIENT_CONFIG_FILEPATH = "config/influxdb.toml"
+DATASOURCE_CONFIG_FILEPATH = "config/datasource.toml"
+APPLICATION_CONFIG_FILEPATH = "config/application.yaml"
 
 
 def setup_logging(client):
@@ -90,6 +91,7 @@ def read_yaml_file(filepath):
 
 
 def main():
+    application_config = read_toml_file(APPLICATION_CONFIG_FILEPATH)
     # Setup fast influxdb client
     influxdb_config = read_toml_file(INFLUXDBCLIENT_CONFIG_FILEPATH)["influx2"]
     client = FastInfluxDBClient.from_config_file(
@@ -103,10 +105,8 @@ def main():
     logger.info(f"Created client to {client.url}", extra=dict(details=f"{client=}"))
 
     # get webpage datasource configuration
-    datasource_config_heatercontrol = read_toml_file(DATASOURCE_CONFIG_FILEPATH)[
-        "heater_control_webpage"
-    ]
-    webpage_url = datasource_config_heatercontrol["url"]
+    datasource_config = read_toml_file(DATASOURCE_CONFIG_FILEPATH)
+    webpage_url = datasource_config["heater_control_webpage"]["url"]
 
     while True:
         try:
@@ -131,6 +131,7 @@ def main():
             try:
                 tags_merged = measurement.tags | tags_extra
             except TypeError:
+                # if no tags specified for measurement, then just assign the extra tags
                 tags_merged = tags_extra
             # Create new metric
             metric = InfluxMetric(
@@ -139,10 +140,13 @@ def main():
                 tags=tags_merged,
                 time=measurement.time,
             )
-            # Write to influx server
-            client.write_metric(metric)
-        # Log measurements to file for debugging
-        logger.debug(measurements)
+            # if application is in 'live' mode
+            if not application_config["debug_mode"]:
+                # Write to influx server
+                client.write_metric(metric)
+            else:
+                # Log measurements to file for debugging
+                logger.debug(metric)
         time.sleep(influxdb_config["update_period"])
 
 
